@@ -9,60 +9,58 @@ export default {
 
         if (env.TGTOKEN) {
             TELEGRAM_TOKEN = env.TGTOKEN;
-        } else {
-            return new Response("变量TGTOKEN 未设置。", { status: 500 });
-        }
-
-        // 处理 webhook
-        if (url.pathname === `/telegram/${TELEGRAM_TOKEN}/webhook`) {
-            try {
-                const update = await request.json();
-                const response = await handleUpdate(update);
-                return new Response(response ? JSON.stringify(response) : "OK", { status: 200 });
-            } catch (e) {
-                return new Response(e.stack, { status: 200 });
-            }
-        }
-
-        if (userAgent.includes('mozilla') && !url.search) {
-            if (url.pathname === `/${TELEGRAM_TOKEN}`) {
-                const domain = url.host;
-                const result = {};
-                const api = createTelegramBotAPI(TELEGRAM_TOKEN);
-                const hookUrl = `https://${domain}/telegram/${TELEGRAM_TOKEN}/webhook`;
-
-                result.webhook = await api.setWebhook({ url: hookUrl }).then(r => r.json());
-                result.commands = await api.setMyCommands({
-                    commands: [
-                        { command: "start", description: "启动机器人" },
-                        { command: "id", description: "获取你的 Telegram ID" }
-                    ]
-                }).then(r => r.json());
-
-                return new Response(JSON.stringify(result, null, 2), {
-                    headers: { "Content-Type": "application/json" }
-                });
-            } else {
+            // 处理 webhook
+            if (url.pathname === `/telegram/${TELEGRAM_TOKEN}/webhook`) {
                 try {
-                    const botUsernameUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/getMe`;
-                    const botInfo = await fetch(botUsernameUrl).then(r => r.json());
-                    // 修改这里：从 result.username 获取机器人用户名
-                    if (botInfo.ok && botInfo.result.username) {
-                        newUrl = `https://t.me/${botInfo.result.username}`;
-                    } else {
-                        throw new Error('Failed to get bot username');
-                    }
+                    const update = await request.json();
+                    const response = await handleUpdate(update);
+                    return new Response(response ? JSON.stringify(response) : "OK", { status: 200 });
                 } catch (e) {
-                    console.error('Error getting bot info:', e);
-                    newUrl = 'https://t.me'; // 如果获取失败则跳转到 Telegram 主页
+                    return new Response(e.stack, { status: 200 });
+                }
+            }
+
+            if (userAgent.includes('mozilla') && !url.search) {
+                if (url.pathname === `/${TELEGRAM_TOKEN}`) {
+                    const domain = url.host;
+                    const result = {};
+                    const api = createTelegramBotAPI(TELEGRAM_TOKEN);
+                    const hookUrl = `https://${domain}/telegram/${TELEGRAM_TOKEN}/webhook`;
+
+                    result.webhook = await api.setWebhook({ url: hookUrl }).then(r => r.json());
+                    result.commands = await api.setMyCommands({
+                        commands: [
+                            { command: "start", description: "启动机器人" },
+                            { command: "id", description: "获取你的 Telegram ID" }
+                        ]
+                    }).then(r => r.json());
+
+                    return new Response(JSON.stringify(result, null, 2), {
+                        headers: { "Content-Type": "application/json" }
+                    });
+                } else {
+                    try {
+                        const botUsernameUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/getMe`;
+                        const botInfo = await fetch(botUsernameUrl).then(r => r.json());
+                        if (botInfo.ok && botInfo.result.username) {
+                            newUrl = `https://t.me/${botInfo.result.username}`;
+                        } else {
+                            throw new Error('Failed to get bot username');
+                        }
+                    } catch (e) {
+                        console.error('Error getting bot info:', e);
+                        newUrl = 'https://t.me'; // 如果获取失败则跳转到 Telegram 主页
+                    }
+                }
+            } else {
+                if (url.pathname.includes('/bot')) {
+                    newUrl = 'https://api.telegram.org' + url.pathname + url.search;
+                } else {
+                    newUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage` + url.search;
                 }
             }
         } else {
-            if (url.pathname.includes('/bot')) {
-                newUrl = 'https://api.telegram.org' + url.pathname + url.search;
-            } else {
-                newUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage` + url.search;
-            }
+            newUrl = 'https://api.telegram.org' + url.pathname + url.search;
         }
 
         // 创建新的请求
