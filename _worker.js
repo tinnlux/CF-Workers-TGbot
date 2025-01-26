@@ -109,7 +109,7 @@ class IdCommandHandler {
 
     formatUserInfo(user) {
         const lines = [];
-        lines.push("🆔 用户信息");
+        lines.push("*用户信息*");
         lines.push(`    ID： \`${this.escapeMarkdown(user.id)}\``);
         lines.push(`    姓： \`${this.escapeMarkdown(user.last_name || '未设置')}\``);
         lines.push(`    名： \`${this.escapeMarkdown(user.first_name || '未设置')}\``);
@@ -132,7 +132,7 @@ class StartCommandHandler {
 
     handle = async (message, context) => {
         const sender = MessageSender.fromMessage(context.SHARE_CONTEXT.TELEGRAM_TOKEN, message);
-        return sender.sendPlainText(`🎉 通知机器人已启动！\n    您的 Telegram ID 是：\`${message.from.id}\``, "MarkdownV2");
+        return sender.sendPlainText(`*通知机器人已启动！*\n    您的 Telegram ID 是：\`${message.from.id}\``, "MarkdownV2");
     };
 }
 
