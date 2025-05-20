@@ -180,6 +180,13 @@ function createTelegramBotAPI(token) {
                 body: JSON.stringify(params)
             });
         },
+        getUpdates: (params) => {
+            return fetch(`${baseURL}/bot${token}/getUpdates`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(params)
+            });
+        },
         setWebhook: (params) => {
             return fetch(`${baseURL}/bot${token}/setWebhook`, {
                 method: "POST",
